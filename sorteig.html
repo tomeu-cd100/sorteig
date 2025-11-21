@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗳️ Sorteig Consell Escolar</title>
+    <style>
+        /* --- ESTIL (CSS) --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            /* Inclou padding i border en l'amplada total */
+            resize: vertical;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        #resultat {
+            margin-top: 30px;
+            padding: 20px;
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            background-color: #e9f0ff;
+        }
+
+        #resultat h2 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+
+        #llista-guanyadors li {
+            font-size: 1.1em;
+            padding: 5px 0;
+            border-bottom: 1px dotted #ccc;
+        }
+
+        #llista-guanyadors li:last-child {
+            border-bottom: none;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            white-space: nowrap;
+        }
+
+        .input-group input[type="number"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 80px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>🗳️ Sorteig Aleatori per al Consell Escolar</h1>
+
+        <h2>1. Importa el Llistat d'Alumnes (350 persones)</h2>
+        <p>Copia i Enganxa el llistat complet dels alumnes. Un nom per línia (prement Enter):</p>
+        <textarea id="llistatAlumnes" placeholder="Nom Alumne 1&#10;Nom Alumne 2&#10;..."></textarea>
+
+        <div class="input-group">
+            <label for="numEscollits">Nombre de persones a escollir:</label>
+            <input type="number" id="numEscollits" value="10" min="1">
+        </div>
+
+        <h2>2. Realitza el Sorteig</h2>
+        <button onclick="ferSorteig()">🎉 FER SORTEIG ALEATORI</button>
+
+        <div id="resultat">
+            <h2>Resultat:</h2>
+            <p id="totalCarregat">Encara no s'ha carregat cap llistat.</p>
+            <ul id="llista-guanyadors">
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // --- LÒGICA (JAVASCRIPT) ---
+        function ferSorteig() {
+            // 1. Obtenir les dades d'entrada
+            const textarea = document.getElementById('llistatAlumnes');
+            const numInput = document.getElementById('numEscollits');
+            const numEscollits = parseInt(numInput.value, 10);
+
+            // 2. Processar el llistat: Separar per línies i netejar espais buits
+            let alumnes = textarea.value
+                .split('\n')
+                .map(nom => nom.trim())
+                .filter(nom => nom.length > 0); // Filtra línies buides
+
+            const totalAlumnes = alumnes.length;
+
+            // 3. Validacions
+            if (totalAlumnes === 0) {
+                alert("❌ Si us plau, enganxa el llistat d'alumnes a l'àrea de text.");
+                return;
+            }
+
+            if (numEscollits <= 0 || isNaN(numEscollits)) {
+                alert("❌ Introdueix un nombre de persones a escollir vàlid.");
+                return;
+            }
+
+            if (numEscollits > totalAlumnes) {
+                alert(`⚠️ Avís: Sols hi ha ${totalAlumnes} alumnes, però demanes ${numEscollits}. S'escolliran tots els alumnes.`);
+            }
+
+            // 4. Barregem (Shuffle) la llista per garantir l'aleatorietat
+            // Algorisme de Fisher-Yates (per barrejar la llista)
+            for (let i = totalAlumnes - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [alumnes[i], alumnes[j]] = [alumnes[j], alumnes[i]];
+            }
+
+            // 5. Seleccionem els guanyadors (els primers 'numEscollits' de la llista barrejada)
+            const guanyadors = alumnes.slice(0, numEscollits);
+
+            // 6. Mostrar el resultat a la pàgina
+            const resultatDiv = document.getElementById('resultat');
+            const totalCarregatParagraf = document.getElementById('totalCarregat');
+            const llistaGuanyadorsUl = document.getElementById('llista-guanyadors');
+
+            // Actualitzem l'estat
+            totalCarregatParagraf.innerHTML = `S'han carregat **${totalAlumnes}** alumnes.`;
+            llistaGuanyadorsUl.innerHTML = ''; // Netejar llista anterior
+
+            // Afegir els guanyadors a la llista
+            guanyadors.forEach((nom, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${index + 1}. ${nom}`;
+                llistaGuanyadorsUl.appendChild(li);
+            });
+
+            // Scroll cap al resultat
+            resultatDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+
+</body>
+
+</html>
